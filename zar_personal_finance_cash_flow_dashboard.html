@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZAR Personal Finance & Cash Flow Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.2);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700/60 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 font-bold text-xl shadow-lg shadow-emerald-500/20">
+                    R
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight text-white">Financial Dashboard</h1>
+                    <p class="text-xs text-slate-400">ZAR Cash Flow & Asset Tracking</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <button onclick="resetData()" class="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-xs font-medium text-red-400 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Reset Defaults</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Top Overview Metric Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <!-- Total Income Card -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between hover:border-emerald-500/40 transition">
+                <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
+                    <span>Total Income</span>
+                    <i class="fa-solid fa-wallet text-emerald-400"></i>
+                </div>
+                <div class="mt-2">
+                    <span class="text-2xl font-bold text-white" id="statTotalIncome">R 0.00</span>
+                    <p class="text-[10px] text-emerald-400 mt-0.5 flex items-center gap-1">
+                        <i class="fa-solid fa-arrow-up"></i>
+                        <span>Active & Passive Inflows</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Fixed Expenses Card -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between hover:border-amber-500/40 transition">
+                <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
+                    <span>Fixed Overhead</span>
+                    <i class="fa-solid fa-house-lock text-amber-400"></i>
+                </div>
+                <div class="mt-2">
+                    <span class="text-2xl font-bold text-white" id="statFixedExpenses">R 0.00</span>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Rent, Utilities, Family, Telecom</p>
+                </div>
+            </div>
+
+            <!-- Vehicles & Debt Card -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between hover:border-rose-500/40 transition">
+                <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
+                    <span>Vehicles & Debt</span>
+                    <i class="fa-solid fa-car text-rose-400"></i>
+                </div>
+                <div class="mt-2">
+                    <span class="text-2xl font-bold text-white" id="statVehiclesDebt">R 0.00</span>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Fuel, Wash & Debt Lines</p>
+                </div>
+            </div>
+
+            <!-- Allocations & Wealth Card -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between hover:border-cyan-500/40 transition">
+                <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
+                    <span>Allocations & Shares</span>
+                    <i class="fa-solid fa-chart-line text-cyan-400"></i>
+                </div>
+                <div class="mt-2">
+                    <span class="text-2xl font-bold text-white" id="statAllocations">R 0.00</span>
+                    <p class="text-[10px] text-cyan-400 mt-0.5">TFSA & Wealth Accounts</p>
+                </div>
+            </div>
+
+            <!-- Net Cash Flow Card -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden" id="netCashFlowCard">
+                <div class="flex items-center justify-between text-slate-400 text-xs font-medium z-10">
+                    <span>Net Monthly Flow</span>
+                    <i class="fa-solid fa-scale-balanced" id="netFlowIcon"></i>
+                </div>
+                <div class="mt-2 z-10">
+                    <span class="text-2xl font-bold" id="statNetCashFlow">R 0.00</span>
+                    <p class="text-[10px] opacity-80 mt-0.5" id="netFlowSubtitle">Income vs Expenses & Allocations</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deficit Alert -->
+        <div id="deficitAlert" class="hidden bg-rose-500/10 border border-rose-500/30 rounded-xl p-4 flex items-center justify-between text-rose-300 text-sm">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-triangle-exclamation text-rose-400 text-lg"></i>
+                <span><strong>Monthly Deficit Alert:</strong> Your total commitments exceed total income. Review line items below to balance your budget.</span>
+            </div>
+            <button onclick="dismissAlert()" class="text-xs bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 px-2.5 py-1 rounded-lg">Dismiss</button>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Expense Breakdown Pie -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5 flex flex-col">
+                <h2 class="text-sm font-semibold text-slate-200 mb-4 flex items-center justify-between">
+                    <span>Expense Distribution</span>
+                    <i class="fa-solid fa-chart-pie text-slate-400"></i>
+                </h2>
+                <div class="relative flex-grow flex items-center justify-center min-h-[220px]">
+                    <canvas id="expenseChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Cash Flow Waterfall Bar Chart -->
+            <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5 lg:col-span-2 flex flex-col">
+                <h2 class="text-sm font-semibold text-slate-200 mb-4 flex items-center justify-between">
+                    <span>Income vs Expense Categories</span>
+                    <i class="fa-solid fa-chart-column text-slate-400"></i>
+                </h2>
+                <div class="relative flex-grow flex items-center justify-center min-h-[220px]">
+                    <canvas id="categoryBarChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabbed Input Management Section -->
+        <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl overflow-hidden">
+            <!-- Tabs Bar -->
+            <div class="flex border-b border-slate-700/60 overflow-x-auto custom-scrollbar bg-slate-900/40">
+                <button onclick="switchTab('income')" id="tab-income" class="px-5 py-3.5 text-xs font-semibold text-emerald-400 border-b-2 border-emerald-400 flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-money-bill-wave"></i> Income Streams
+                </button>
+                <button onclick="switchTab('overhead')" id="tab-overhead" class="px-5 py-3.5 text-xs font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-house"></i> Fixed Overhead
+                </button>
+                <button onclick="switchTab('commuter')" id="tab-commuter" class="px-5 py-3.5 text-xs font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-car-side"></i> Vehicle 2 (Commuter)
+                </button>
+                <button onclick="switchTab('rental')" id="tab-rental" class="px-5 py-3.5 text-xs font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-truck-pickup"></i> Vehicle 1 (Rental)
+                </button>
+                <button onclick="switchTab('debt')" id="tab-debt" class="px-5 py-3.5 text-xs font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-credit-card"></i> Debt & Credit
+                </button>
+                <button onclick="switchTab('wealth')" id="tab-wealth" class="px-5 py-3.5 text-xs font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-vault"></i> Wealth & Sub-Accounts
+                </button>
+            </div>
+
+            <!-- Tab Contents -->
+            <div class="p-6">
+
+                <!-- Income Section -->
+                <div id="content-income" class="tab-content">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-base font-semibold text-white">Monthly Inflows</h3>
+                            <p class="text-xs text-slate-400">Record salary, allowances, and commercial vehicle rental revenues.</p>
+                        </div>
+                        <button onclick="addCustomRow('income')" class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus"></i> Add Item
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="text-xs text-slate-400 uppercase bg-slate-900/60 rounded-lg">
+                                <tr>
+                                    <th class="px-4 py-3 rounded-l-lg">Income Source</th>
+                                    <th class="px-4 py-3">Category</th>
+                                    <th class="px-4 py-3 w-48 text-right">Amount (ZAR)</th>
+                                    <th class="px-4 py-3 w-16 text-center rounded-r-lg">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-income" class="divide-y divide-slate-700/40"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Fixed Overhead Section -->
+                <div id="content-overhead" class="tab-content hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-base font-semibold text-white">Fixed Overhead & Recurring Expenses</h3>
+                            <p class="text-xs text-slate-400">Essential living expenses, accommodation, family support, and contracts.</p>
+                        </div>
+                        <button onclick="addCustomRow('overhead')" class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus"></i> Add Expense
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="text-xs text-slate-400 uppercase bg-slate-900/60 rounded-lg">
+                                <tr>
+                                    <th class="px-4 py-3 rounded-l-lg">Expense Item</th>
+                                    <th class="px-4 py-3">Note / Details</th>
+                                    <th class="px-4 py-3 w-48 text-right">Amount (ZAR)</th>
+                                    <th class="px-4 py-3 w-16 text-center rounded-r-lg">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-overhead" class="divide-y divide-slate-700/40"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Vehicle 2 Commuter Section -->
+                <div id="content-commuter" class="tab-content hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-base font-semibold text-white">Vehicle 2 (Personal Commuter)</h3>
+                            <p class="text-xs text-slate-400">Running costs, fuel baseline, car wash, insurance, and sinking funds.</p>
+                        </div>
+                        <button onclick="addCustomRow('commuter')" class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus"></i> Add Expense
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="text-xs text-slate-400 uppercase bg-slate-900/60 rounded-lg">
+                                <tr>
+                                    <th class="px-4 py-3 rounded-l-lg">Cost Item</th>
+                                    <th class="px-4 py-3">Category</th>
+                                    <th class="px-4 py-3 w-48 text-right">Amount (ZAR)</th>
+                                    <th class="px-4 py-3 w-16 text-center rounded-r-lg">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-commuter" class="divide-y divide-slate-700/40"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Vehicle 1 Commercial Rental Section -->
+                <div id="content-rental" class="tab-content hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-base font-semibold text-white">Vehicle 1 (Commercial Rental Asset)</h3>
+                            <p class="text-xs text-slate-400">Finance installments, commercial insurance, and maintenance reserve pools.</p>
+                        </div>
+                        <button onclick="addCustomRow('rental')" class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus"></i> Add Item
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="text-xs text-slate-400 uppercase bg-slate-900/60 rounded-lg">
+                                <tr>
+                                    <th class="px-4 py-3 rounded-l-lg">Item Name</th>
+                                    <th class="px-4 py-3">Notes</th>
+                                    <th class="px-4 py-3 w-48 text-right">Amount (ZAR)</th>
+                                    <th class="px-4 py-3 w-16 text-center rounded-r-lg">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-rental" class="divide-y divide-slate-700/40"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Debt Section -->
+                <div id="content-debt" class="tab-content hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-base font-semibold text-white">Debt & Credit Obligations</h3>
+                            <p class="text-xs text-slate-400">Loans, retail credit facilities, and BNPL obligations.</p>
+                        </div>
+                        <button onclick="addCustomRow('debt')" class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus"></i> Add Debt Line
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="text-xs text-slate-400 uppercase bg-slate-900/60 rounded-lg">
+                                <tr>
+                                    <th class="px-4 py-3 rounded-l-lg">Lender / Facility</th>
+                                    <th class="px-4 py-3">Type</th>
+                                    <th class="px-4 py-3 w-48 text-right">Monthly Installment (ZAR)</th>
+                                    <th class="px-4 py-3 w-16 text-center rounded-r-lg">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-debt" class="divide-y divide-slate-700/40"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Sub-Accounts & Wealth Section -->
+                <div id="content-wealth" class="tab-content hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-base font-semibold text-white">Sub-Accounts & Wealth Allocations</h3>
+                            <p class="text-xs text-slate-400">Monthly contributions to tax-free shares, pockets, and savings vaults.</p>
+                        </div>
+                        <button onclick="addCustomRow('wealth')" class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-medium transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus"></i> Add Allocation
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="text-xs text-slate-400 uppercase bg-slate-900/60 rounded-lg">
+                                <tr>
+                                    <th class="px-4 py-3 rounded-l-lg">Account / Destination</th>
+                                    <th class="px-4 py-3">Type</th>
+                                    <th class="px-4 py-3 w-48 text-right">Contribution (ZAR)</th>
+                                    <th class="px-4 py-3 w-16 text-center rounded-r-lg">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-wealth" class="divide-y divide-slate-700/40"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+        <p>Personal Finance Master Dashboard &bull; South Africa (ZAR) &bull; Auto-saving changes locally</p>
+    </footer>
+
+    <!-- Main Logic Script -->
+    <script>
+        const initialFinanceData = {
+            income: [
+                { id: 'inc_1', name: 'Base Salary', note: 'Employment Primary', amount: 25000 },
+                { id: 'inc_2', name: 'Overtime Allowance', note: 'Variable Allowance', amount: 3500 },
+                { id: 'inc_3', name: 'Vehicle 1 Rental Income', note: 'Commercial Asset Yield', amount: 10500 }
+            ],
+            overhead: [
+                { id: 'ovh_1', name: 'Rent', note: 'Accommodation Baseline', amount: 4200 },
+                { id: 'ovh_2', name: 'Electricity', note: 'Prepaid / Utilities', amount: 400 },
+                { id: 'ovh_3', name: 'Groceries Baseline', note: 'Monthly Food Supplies', amount: 2500 },
+                { id: 'ovh_4', name: 'Remittance to Mother', note: 'Family Support', amount: 3000 },
+                { id: 'ovh_5', name: 'Funeral Policy', note: 'Cover Policy', amount: 250 },
+                { id: 'ovh_6', name: 'MTN Contract', note: 'Mobile Services', amount: 1200 },
+                { id: 'ovh_7', name: 'Google / YouTube Premium', note: 'Digital Subscriptions', amount: 120 }
+            ],
+            commuter: [
+                { id: 'com_1', name: 'Fuel Baseline', note: 'Personal Commute', amount: 2500 },
+                { id: 'com_2', name: 'Car Wash', note: 'Vehicle Maintenance', amount: 200 },
+                { id: 'com_3', name: 'Finance Installment', note: 'Personal Vehicle Loan', amount: 3800 },
+                { id: 'com_4', name: 'Insurance & Tracker', note: 'Vehicle Protection', amount: 950 },
+                { id: 'com_5', name: 'Balloon Sinking Fund', note: 'Future Repayment', amount: 1000 },
+                { id: 'com_6', name: 'Maintenance & License', note: 'Renewal Reserve', amount: 300 }
+            ],
+            rental: [
+                { id: 'ren_1', name: 'Finance Installment', note: 'Commercial Finance', amount: 4500 },
+                { id: 'ren_2', name: 'Commercial Insurance', note: 'Commercial Policy', amount: 1200 },
+                { id: 'ren_3', name: 'Maintenance Reserve Pool', note: 'Asset Pool Reserve', amount: 800 }
+            ],
+            debt: [
+                { id: 'dbt_1', name: 'Capfin 12-Month Loan', note: 'Personal Loan', amount: 1100 },
+                { id: 'dbt_2', name: 'Truworths Line of Credit', note: 'Store Account', amount: 450 },
+                { id: 'dbt_3', name: 'Payflex BNPL', note: 'Short-term BNPL', amount: 600 }
+            ],
+            wealth: [
+                { id: 'wth_1', name: 'Tax-Free Shares', note: 'Investments / TFSA', amount: 500 },
+                { id: 'wth_2', name: 'Shares Pocket', note: 'Trading Account', amount: 1000 },
+                { id: 'wth_3', name: 'Transport Pocket', note: 'Sub-Account', amount: 500 },
+                { id: 'wth_4', name: 'Notice Deposit / Lobola Vault', note: 'Savings Reserve', amount: 1500 }
+            ]
+        };
+
+        let financeData = initialFinanceData;
+        try {
+            const saved = localStorage.getItem('zar_finance_data_html');
+            if (saved) financeData = JSON.parse(saved);
+        } catch(e) {}
+
+        let expenseChart = null;
+        let categoryBarChart = null;
+
+        function formatZAR(val) {
+            return 'R ' + (parseFloat(val) || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function renderTables() {
+            Object.keys(financeData).forEach(category => {
+                const tbody = document.getElementById(`table-${category}`);
+                if (!tbody) return;
+
+                tbody.innerHTML = '';
+                financeData[category].forEach((item) => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-800/40 transition-colors';
+
+                    tr.innerHTML = `
+                        <td class="px-4 py-3 font-medium text-slate-200">
+                            <input type="text" value="${item.name}" onchange="updateItem('${category}', '${item.id}', 'name', this.value)" 
+                                class="bg-transparent hover:bg-slate-800 focus:bg-slate-900 border border-transparent focus:border-slate-600 rounded px-2 py-1 w-full text-slate-200 focus:outline-none transition">
+                        </td>
+                        <td class="px-4 py-3 text-slate-400">
+                            <input type="text" value="${item.note || ''}" onchange="updateItem('${category}', '${item.id}', 'note', this.value)" 
+                                class="bg-transparent hover:bg-slate-800 focus:bg-slate-900 border border-transparent focus:border-slate-600 rounded px-2 py-1 w-full text-slate-400 focus:outline-none transition text-xs">
+                        </td>
+                        <td class="px-4 py-3 text-right">
+                            <div class="relative flex items-center justify-end">
+                                <span class="text-xs text-slate-500 mr-1.5">R</span>
+                                <input type="number" step="0.01" value="${item.amount}" onchange="updateItem('${category}', '${item.id}', 'amount', parseFloat(this.value) || 0)" 
+                                    class="bg-slate-900/80 hover:bg-slate-800 focus:bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded px-2.5 py-1 text-right w-36 text-white font-semibold focus:outline-none transition">
+                            </div>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <button onclick="deleteItem('${category}', '${item.id}')" class="text-slate-500 hover:text-rose-400 p-1 rounded transition">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+
+        function addCustomRow(category) {
+            const newItem = {
+                id: 'custom_' + Date.now(),
+                name: 'New Custom Line',
+                note: 'Description',
+                amount: 0
+            };
+            financeData[category].push(newItem);
+            saveData();
+            renderTables();
+            calculateTotals();
+        }
+
+        function updateItem(category, id, field, value) {
+            const item = financeData[category].find(i => i.id === id);
+            if (item) {
+                item[field] = value;
+                saveData();
+                calculateTotals();
+            }
+        }
+
+        function deleteItem(category, id) {
+            financeData[category] = financeData[category].filter(i => i.id !== id);
+            saveData();
+            renderTables();
+            calculateTotals();
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem('zar_finance_data_html', JSON.stringify(financeData));
+            } catch(e) {}
+        }
+
+        function resetData() {
+            financeData = JSON.parse(JSON.stringify(initialFinanceData));
+            saveData();
+            renderTables();
+            calculateTotals();
+        }
+
+        function calculateTotals() {
+            const totalIncome = financeData.income.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+            const totalFixed = financeData.overhead.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+            const totalCommuter = financeData.commuter.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+            const totalRental = financeData.rental.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+            const totalDebt = financeData.debt.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+            const totalWealth = financeData.wealth.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+
+            const totalVehiclesDebt = totalCommuter + totalRental + totalDebt;
+            const totalExpensesAndAllocations = totalFixed + totalVehiclesDebt + totalWealth;
+            const netCashFlow = totalIncome - totalExpensesAndAllocations;
+
+            document.getElementById('statTotalIncome').innerText = formatZAR(totalIncome);
+            document.getElementById('statFixedExpenses').innerText = formatZAR(totalFixed);
+            document.getElementById('statVehiclesDebt').innerText = formatZAR(totalVehiclesDebt);
+            document.getElementById('statAllocations').innerText = formatZAR(totalWealth);
+
+            const netStat = document.getElementById('statNetCashFlow');
+            const netCard = document.getElementById('netCashFlowCard');
+            const netIcon = document.getElementById('netFlowIcon');
+            const deficitAlert = document.getElementById('deficitAlert');
+
+            netStat.innerText = formatZAR(netCashFlow);
+
+            if (netCashFlow < 0) {
+                netStat.className = "text-2xl font-bold text-rose-400";
+                netCard.className = "bg-rose-950/30 border border-rose-500/40 rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden";
+                netIcon.className = "fa-solid fa-arrow-down-long text-rose-400";
+                deficitAlert.classList.remove('hidden');
+            } else {
+                netStat.className = "text-2xl font-bold text-emerald-400";
+                netCard.className = "bg-emerald-950/30 border border-emerald-500/40 rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden";
+                netIcon.className = "fa-solid fa-arrow-up-long text-emerald-400";
+                deficitAlert.classList.add('hidden');
+            }
+
+            updateCharts(totalIncome, totalFixed, totalCommuter, totalRental, totalDebt, totalWealth);
+        }
+
+        function dismissAlert() {
+            document.getElementById('deficitAlert').classList.add('hidden');
+        }
+
+        function updateCharts(income, fixed, commuter, rental, debt, wealth) {
+            const pieCtx = document.getElementById('expenseChart').getContext('2d');
+            const barCtx = document.getElementById('categoryBarChart').getContext('2d');
+
+            if (expenseChart) expenseChart.destroy();
+            expenseChart = new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Fixed Overhead', 'Commuter Vehicle', 'Rental Vehicle', 'Debt Lines', 'Wealth & Savings'],
+                    datasets: [{
+                        data: [fixed, commuter, rental, debt, wealth],
+                        backgroundColor: ['#f59e0b', '#ec4899', '#8b5cf6', '#f43f5e', '#06b6d4'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#94a3b8', font: { size: 10 } }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+
+            if (categoryBarChart) categoryBarChart.destroy();
+            categoryBarChart = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Total Inflow', 'Fixed Overhead', 'Vehicles & Debt', 'Wealth Allocations'],
+                    datasets: [{
+                        label: 'Amount (ZAR)',
+                        data: [income, fixed, (commuter + rental + debt), wealth],
+                        backgroundColor: ['#22c55e', '#f59e0b', '#f43f5e', '#06b6d4'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { display: false } },
+                        y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#334155' } }
+                    }
+                }
+            });
+        }
+
+        function switchTab(tabKey) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('[id^="tab-"]').forEach(el => {
+                el.className = 'px-5 py-3.5 text-xs font-semibold text-slate-400 hover:text-slate-200 border-b-2 border-transparent flex items-center gap-2 whitespace-nowrap';
+            });
+
+            document.getElementById(`content-${tabKey}`).classList.remove('hidden');
+            const activeTab = document.getElementById(`tab-${tabKey}`);
+            activeTab.className = 'px-5 py-3.5 text-xs font-semibold text-emerald-400 border-b-2 border-emerald-400 flex items-center gap-2 whitespace-nowrap';
+        }
+
+        window.onload = function() {
+            renderTables();
+            calculateTotals();
+        };
+    </script>
+</body>
+</html>
